@@ -11,6 +11,16 @@ def get_connection():
     return conn
 
 
+def get_request_by_id(request_id):
+    """Fetch a request by id, or return None if it does not exist."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM requests WHERE id = ?", (request_id,))
+    row = cur.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def init_db():
     conn = get_connection()
     cur = conn.cursor()
@@ -140,6 +150,7 @@ def seed_sample_data():
             150,
             "active",
             now,
+            now,
         ),
         (
             user_map["Bob Chen"],
@@ -154,6 +165,7 @@ def seed_sample_data():
             -122.6613,
             80,
             "active",
+            now,
             now,
         ),
         (
@@ -170,6 +182,7 @@ def seed_sample_data():
             0,
             "active",
             now,
+            now,
         ),
         (
             user_map["David Kim"],
@@ -185,6 +198,7 @@ def seed_sample_data():
             120,
             "active",
             now,
+            now,
         ),
         (
             user_map["Elena Rossi"],
@@ -199,6 +213,7 @@ def seed_sample_data():
             -122.6500,
             45,
             "active",
+            now,
             now,
         ),
     ]
@@ -228,6 +243,7 @@ def seed_sample_data():
             100,
             "open",
             now,
+            now,
         ),
         (
             user_map["Carla Oliveira"],
@@ -241,6 +257,7 @@ def seed_sample_data():
             30,
             500,
             "open",
+            now,
             now,
         ),
         (
@@ -256,6 +273,7 @@ def seed_sample_data():
             200,
             "open",
             now,
+            now,
         ),
         (
             user_map["Alice Martinez"],
@@ -269,6 +287,7 @@ def seed_sample_data():
             40,
             75,
             "open",
+            now,
             now,
         ),
     ]
@@ -294,6 +313,7 @@ def seed_sample_data():
             "pending",
             0,
             now,
+            None,
         ),
         (
             2,  # listing_id
@@ -304,6 +324,7 @@ def seed_sample_data():
             "pending",
             0,
             now,
+            None,
         ),
     ]
 

@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.db")
 
@@ -214,8 +214,8 @@ def seed_if_empty():
 
         # Seed enquiries
         enquiries_data = [
-            (1, 1, user_map["Alice Martinez"], user_map["Bob Chen"], "Interested in your salvaged red bricks for a community project.", "pending", 0, now),
-            (2, 2, user_map["Carla Oliveira"], user_map["David Kim"], "Want to take your excess concrete blocks for community garden.", "pending", 0, now),
+            (1, 1, user_map["Alice Martinez"], user_map["Bob Chen"], "Interested in your salvaged red bricks for a community project.", "pending", 0, now, None),
+            (2, 2, user_map["Carla Oliveira"], user_map["David Kim"], "Want to take your excess concrete blocks for community garden.", "pending", 0, now, None),
         ]
 
         for e in enquiries_data:

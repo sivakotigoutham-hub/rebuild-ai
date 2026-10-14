@@ -4,6 +4,7 @@ import os
 import sqlite3
 import math
 from datetime import datetime
+from PIL import Image
 
 # Page config must be first
 st.set_page_config(
@@ -124,16 +125,19 @@ def get_enquiries(listing_id=None, user_name=None):
 
     if listing_id:
         cur.execute(
-            "SELECT * FROM enquiries WHERE listing_id = ? ORDER BY created_at DESC",
+            "SELECT * FROM enquiries WHERE listing_id = ? ORDER BY updated_at DESC",
             (listing_id,),
         )
     elif user_name:
+        cur.execute("SELECT id FROM users WHERE name = ?", (user_name,))
+        user_row = cur.fetchone()
+        user_id = user_row["id"] if user_row else 0
         cur.execute(
-            "SELECT * FROM enquiries WHERE supplier_id = ? OR recipient_id = ? ORDER BY created_at DESC",
-            (user_map.get(user_name, 0), user_map.get(user_name, 0)),
+            "SELECT * FROM enquiries WHERE supplier_id = ? OR recipient_id = ? ORDER BY updated_at DESC",
+            (user_id, user_id),
         )
     else:
-        cur.execute("SELECT * FROM enquiries ORDER BY created_at DESC")
+        cur.execute("SELECT * FROM enquiries ORDER BY updated_at DESC")
 
     rows = cur.fetchall()
     conn.close()
@@ -163,7 +167,7 @@ def get_matches_for_request(request_id):
             matches.append((listing_dict, score_data))
 
     # Sort by score descending
-    matches.sort(key=lambda x: x["score"]["score"], reverse=True)
+    matches.sort(key=lambda x: x[1]["score"], reverse=True)
     return matches
 
 
@@ -236,7 +240,7 @@ def home_page():
                 if lst["image_path"] and os.path.exists(os.path.join(UPLOADS_DIR, lst["image_path"])):
                     st.image(os.path.join(UPLOADS_DIR, lst["image_path"]), width=80)
                 else:
-                    st.box(height=80, label="No image")
+                    st.markdown("<div style='height:80px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
             with col_b:
                 st.markdown(f"**{lst['title']}** — {lst['material_type']}")
                 st.caption(f"{lst['quantity']} {lst['unit']} | {lst['condition']} | {lst['location_text']}")
@@ -260,7 +264,7 @@ def home_page():
                         if lst["image_path"] and os.path.exists(os.path.join(UPLOADS_DIR, lst["image_path"])):
                             st.image(os.path.join(UPLOADS_DIR, lst["image_path"]), width=100)
                         else:
-                            st.box(height=100, label="No image")
+                            st.markdown("<div style='height:100px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
                     with col2:
                         st.markdown(f"**{lst['title']}** — {lst['material_type']}")
                         st.caption(f"{lst['quantity']} {lst['unit']} | {lst['condition']}")
@@ -613,7 +617,7 @@ def find_materials_page():
                             if img_url:
                                 st.image(img_url, width=150)
                             else:
-                                st.box(height=150, label="No image")
+                                st.markdown("<div style='height:150px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
                         with col2:
                             st.markdown(f"**{listing['title']}**")
                             st.caption(f"{listing['material_type']} | {listing['quantity']} {listing['unit']}")
@@ -628,8 +632,7 @@ def find_materials_page():
 
                             # Price
                             st.caption(f"Asking Price: ${listing['price'] or 0}")
-
-# Match score and breakdown
+                            # Match score and breakdown
                             st.markdown(f"**Match Score: {score_data['score']}/100**")
                             st.caption(
                                 f"Material: {score_data['material_compatibility']}/100 · "
@@ -638,11 +641,11 @@ def find_materials_page():
                                 f"Distance: {score_data['distance_suitability']}/100"
                             )
 
-                                # Enquiry button
-                                recipient_name = get_user_name()
-                                if st.button(
-                                    f"Send Enquiry →",
-                                    key=f"enquire_{listing['id']}_{request['id']}",
+                            # Enquiry button
+                            recipient_name = get_user_name()
+                            if st.button(
+                                    f"Send Enquiry ->",
+                                    key=f"enquire_{listing['id']}_{abs(hash((listing['id'], request.get('material_type', ''))))}",
                                     use_container_width=True,
                                 ):
                                     # Create enquiry
@@ -663,7 +666,7 @@ def find_materials_page():
                                             """,
                                                 (
                                                     listing["id"],
-                                                    request["id"] if "id" in request else 0,
+                                                    0,
                                                     supplier_id,
                                                     recipient_id,
                                                     message,
@@ -703,14 +706,14 @@ def my_listings_page():
 
     # Enquiries sent (supplier)
     cur.execute(
-        "SELECT * FROM enquiries WHERE supplier_id = ? ORDER BY created_at DESC",
+        "SELECT * FROM enquiries WHERE supplier_id = ? ORDER BY updated_at DESC",
         (user_db_id,),
     )
     sent_enquiries = cur.fetchall()
 
     # Enquiries received (recipient)
     cur.execute(
-        "SELECT * FROM enquiries WHERE recipient_id = ? ORDER BY created_at DESC",
+        "SELECT * FROM enquiries WHERE recipient_id = ? ORDER BY updated_at DESC",
         (user_db_id,),
     )
     received_enquiries = cur.fetchall()
@@ -730,7 +733,7 @@ def my_listings_page():
                         if lst["image_path"] and os.path.exists(os.path.join(UPLOADS_DIR, lst["image_path"])):
                             st.image(os.path.join(UPLOADS_DIR, lst["image_path"]), width=100)
                         else:
-                            st.box(height=100, label="No image")
+                            st.markdown("<div style='height:100px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
                     with col2:
                         st.markdown(f"**{lst['title']}**")
                         st.caption(f"{lst['material_type']} | {lst['quantity']} {lst['unit']} | {lst['condition']}")
@@ -773,7 +776,7 @@ def my_listings_page():
                         ):
                             st.image(os.path.join(UPLOADS_DIR, env_dict["image_path"]), width=80)
                         else:
-                            st.box(height=80, label="No image")
+                            st.markdown("<div style='height:80px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
                     with col2:
                         st.markdown(f"**{env_dict.get('listing_title', '')}**")
                         st.caption(f"Listing ID: {env_dict.get('listing_id', '')} | Request ID: {env_dict.get('request_id', '')}")
@@ -813,7 +816,7 @@ def my_listings_page():
                         ):
                             st.image(os.path.join(UPLOADS_DIR, env_dict["image_path"]), width=80)
                         else:
-                            st.box(height=80, label="No image")
+                            st.markdown("<div style='height:80px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
                     with col2:
                         st.markdown(f"**{env_dict.get('listing_title', '')}**")
                         st.caption(f"Material: {env_dict.get('material_type', '')}")
@@ -985,7 +988,7 @@ def impact_dashboard_page():
                     if img_path and os.path.exists(os.path.join(UPLOADS_DIR, img_path)):
                         st.image(os.path.join(UPLOADS_DIR, img_path), width=60)
                     else:
-                        st.box(height=60, label="No image")
+                        st.markdown("<div style='height:60px; border:1px solid #ddd; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;'>No image</div>", unsafe_allow_html=True)
                 with col2:
                     st.markdown(f"**{lst}** — {mat}")
                     st.caption(f"Quantity reused: {qty}")
