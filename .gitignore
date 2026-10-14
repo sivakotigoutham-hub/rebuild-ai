@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+env/
+.vscode/
+
+# Streamlit
+/.streamlit/
+
+# Database
+database.db
+
+# Uploads
+/uploads/*
+!/.gitkeep
+
+# Distribution
+/dist/
+*.egg-info/
